@@ -194,3 +194,52 @@ export const getWeeklyInsights = (logs) => {
   }, {});
   return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
 };
+// 1. Theme Definitions
+export const THEMES = {
+  soft: {
+    name: "Soft Cloud",
+    bg: "#fdfcfb",
+    text: "#4a4e69",
+    accent: "#9eb3c2",
+    grid: "#e5e7eb"
+  },
+  forest: {
+    name: "Quiet Forest",
+    bg: "#f1f3f0",
+    text: "#2d3319",
+    accent: "#798478",
+    grid: "#d1d5db"
+  },
+  midnight: {
+    name: "Midnight",
+    bg: "#1a1a2e",
+    text: "#e94560",
+    accent: "#0f3460",
+    grid: "#16213e"
+  }
+};
+
+// 2. Map Core Moods to specific colors for the calendar
+export const MOOD_COLORS = {
+  "Joyful": "#FFD700",
+  "Peaceful": "#A2D2FF",
+  "Sad": "#B8C1EC",
+  "Powerful": "#FF8B94",
+  "Fear": "#D1D1D1",
+  "Anger": "#F08080"
+};
+
+// 3. Helper to get all logs
+export const getAllLogs = () => {
+  return JSON.parse(localStorage.getItem('moodLogs') || '[]');
+};
+
+// 4. Helper to get a summary of the week
+export const getWeeklySummary = (logs) => {
+  const last7Days = logs.slice(0, 7);
+  const topMood = last7Days.reduce((acc, curr) => {
+    acc[curr.core] = (acc[curr.core] || 0) + 1;
+    return acc;
+  }, {});
+  return Object.keys(topMood).reduce((a, b) => topMood[a] > topMood[b] ? a : b, "None");
+};
