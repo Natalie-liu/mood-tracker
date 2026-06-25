@@ -1,0 +1,139 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const MOOD_DATA = {
+  Joy: { color: '#FFD700', sub: ['Content', 'Ecstatic', 'Peaceful', 'Proud'] },
+  Sad: { color: '#A2D2FF', sub: ['Lonely', 'Gloom', 'Heavy', 'Disappointed'] },
+  Power: { color: '#FF8B94', sub: ['Confident', 'Inspired', 'Capable', 'Daring'] },
+  Fear: { color: '#B8C1EC', sub: ['Anxious', 'Overwhelmed', 'Worry', 'Fragile'] },
+  Anger: { color: '#F08080', sub: ['Frustrated', 'Annoyed', 'Resentful', 'Bitter'] },
+};
+
+const PROMPTS = [
+  "What felt 'light' about today?",
+  "If your mood was a weather pattern right now, what would it be?",
+  "What is a small thing you noticed today that usually goes ignored?",
+  "What does your body need in this moment?"
+];
+
+export default function MoodTracker() {
+  const [step, setStep] = useState(1); // 1: Core, 2: Nuance, 3: Reflection
+  const [entry, setEntry] = useState({
+    core: '',
+    nuance: '',
+    energy: 5,
+    note: '',
+    tags: []
+  });
+  const [activePrompt, setActivePrompt] = useState("");
+
+  useEffect(() => {
+    // Pick a random prompt on load
+    setActivePrompt(PROMPTS[Math.floor(Math.random() * PROMPTS.length)]);
+  }, []);
+
+  const selectCore = (mood) => {
+    setEntry({ ...entry, core: mood });
+    setStep(2);
+  };
+
+  const selectNuance = (n) => {
+    setEntry({ ...entry, nuance: n });
+    setStep(3);
+  };
+
+  return (
+    <div className="max-w-xl mx-auto p-8 min-h-screen flex flex-col justify-center">
+      
+      {/* Progress Indicator */}
+      <div className="flex gap-2 mb-12 justify-center">
+        {[1, 2, 3].map(i => (
+          <div key={i} className={`h-1 w-12 rounded-full transition-all duration-500 ${step >= i ? 'bg-[var(--text-main)]' : 'bg-gray-200'}`} />
+        ))}
+      </div>
+
+      <AnimatePresence mode="wait">
+        {/* Step 1: Core Emotion */}
+        {step === 1 && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+            className="text-center"
+          >
+            <h2 className="text-2xl font-light mb-8">How are you, truly?</h2>
+            <div className="grid grid-cols-2 gap-4">
+              {Object.keys(MOOD_DATA).map(mood => (
+                <button
+                  key={mood}
+                  onClick={() => selectCore(mood)}
+                  className="p-6 rounded-2xl border border-[var(--accent)] hover:bg-[var(--accent)] hover:text-white transition-all text-lg font-medium"
+                >
+                  {mood}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 2: Nuance Selector */}
+        {step === 2 && (
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+            className="text-center"
+          >
+            <button onClick={() => setStep(1)} className="text-sm opacity-50 mb-4">← Back</button>
+            <h2 className="text-2xl font-light mb-8">Specifically, you feel...</h2>
+            <div className="flex flex-wrap justify-center gap-3">
+              {MOOD_DATA[entry.core].sub.map(subMood => (
+                <button
+                  key={subMood}
+                  onClick={() => selectNuance(subMood)}
+                  className="px-8 py-3 rounded-full border border-[var(--text-main)] hover:bg-[var(--text-main)] hover:text-white transition-all"
+                >
+                  {subMood}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 3: Reflection & Tags */}
+        {step === 3 && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+            className="bg-[var(--card-bg)] p-8 rounded-3xl shadow-sm border border-gray-100"
+          >
+            <h2 className="text-xl font-medium mb-2">{entry.nuance} {entry.core}</h2>
+            <p className="italic opacity-70 mb-6 font-serif">"{activePrompt}"</p>
+            
+            <textarea 
+              className="w-full h-32 p-4 rounded-xl bg-gray-50 border-none focus:ring-1 focus:ring-[var(--accent)] resize-none mb-6"
+              placeholder="Write freely..."
+              onChange={(e) => setEntry({...entry, note: e.target.value})}
+            />
+
+            <div className="mb-6">
+              <label className="text-sm block mb-2 opacity-60">Energy Level</label>
+              <input 
+                type="range" min="1" max="10" 
+                value={entry.energy}
+                onChange={(e) => setEntry({...entry, energy: e.target.value})}
+                className="w-full accent-[var(--text-main)]"
+              />
+            </div>
+
+            <button 
+              className="w-full py-4 bg-[var(--text-main)] text-white rounded-xl font-medium tracking-wide shadow-lg hover:opacity-90 transition-opacity"
+              onClick={() => {
+                console.log("Saved Entry:", entry);
+                alert("Entry saved to your timeline.");
+                setStep(1); // Reset
+              }}
+            >
+              Finish Reflection
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
