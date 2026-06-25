@@ -1,7 +1,98 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MOOD_HIERARCHY, PROMPTS, saveMoodLog } from './logistics';
 
+export default function MainApp() {
+  const [view, setView] = useState('selector'); // selector, reflection, patterns
+  const [step, setStep] = useState(1); // 1: Core, 2: Secondary, 3: Tertiary
+  const [selection, setSelection] = useState({ core: '', secondary: '', tertiary: '' });
+  const [note, setNote] = useState('');
+
+  // 1. Logic for picking moods
+  const handleSelection = (level, value) => {
+    setSelection(prev => ({ ...prev, [level]: value }));
+    if (level === 'tertiary') {
+      setView('reflection');
+    } else {
+      setStep(step + 1);
+    }
+  };
+
+  return (
+    <div className="app-container p-6 max-w-lg mx-auto text-center">
+      <AnimatePresence mode="wait">
+        
+        {/* VIEW: MOOD SELECTOR */}
+        {view === 'selector' && (
+          <motion.div key="selector" initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}>
+            <h1 className="text-3xl font-light mb-10">How do you feel?</h1>
+            
+            <div className="grid gap-4">
+              {/* Step 1: Core */}
+              {step === 1 && Object.keys(MOOD_HIERARCHY).map(m => (
+                <button key={m} onClick={() => handleSelection('core', m)} className="p-5 rounded-2xl border hover:bg-slate-50">
+                  {m}
+                </button>
+              ))}
+
+              {/* Step 2: Secondary */}
+              {step === 2 && Object.keys(MOOD_HIERARCHY[selection.core].secondary).map(m => (
+                <button key={m} onClick={() => handleSelection('secondary', m)} className="p-5 rounded-2xl border bg-slate-50">
+                  {m}
+                </button>
+              ))}
+
+              {/* Step 3: Tertiary (Nuance) */}
+              {step === 3 && MOOD_HIERARCHY[selection.core].secondary[selection.secondary].map(m => (
+                <button key={m} onClick={() => handleSelection('tertiary', m)} className="p-5 rounded-2xl border bg-blue-50">
+                  {m}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {/* VIEW: REFLECTION */}
+        {view === 'reflection' && (
+          <motion.div key="reflection" initial={{y: 20}} animate={{y: 0}}>
+            <h2 className="text-sm uppercase tracking-widest opacity-50 mb-2">Reflect</h2>
+            <p className="text-xl mb-6 font-serif italic text-slate-700">"{PROMPTS[0]}"</p>
+            
+            <textarea 
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              className="w-full h-40 p-4 bg-white rounded-3xl border-none shadow-inner focus:ring-2 focus:ring-blue-100"
+              placeholder="Start writing..."
+            />
+
+            <button 
+              onClick={() => {
+                saveMoodLog({ ...selection, note });
+                setView('success');
+              }}
+              className="mt-8 px-10 py-4 bg-slate-800 text-white rounded-full"
+            >
+              Save Entry
+            </button>
+          </motion.div>
+        )}
+
+        {/* VIEW: SUCCESS */}
+        {view === 'success' && (
+          <motion.div key="success" className="py-20">
+            <h2 className="text-2xl font-light mb-4">Logged.</h2>
+            <p className="opacity-60 mb-8">Take a deep breath.</p>
+            <button onClick={() => { setView('selector'); setStep(1); }} className="underline">Back home</button>
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+    </div>
+  );
+}
 :root {
   --bg-color: #fdfcfb;
   --card-bg: #ffffff;
