@@ -137,3 +137,60 @@ export default function MoodTracker() {
     </div>
   );
 }
+// The 3-tier Mood Hierarchy
+export const MOOD_HIERARCHY = {
+  "Joyful": {
+    color: "#FFD700",
+    secondary: {
+      "Content": ["Pleased", "Satisfied"],
+      "Excited": ["Energetic", "Enthusiastic"],
+      "Proud": ["Illustrious", "Confident"]
+    }
+  },
+  "Peaceful": {
+    color: "#A2D2FF",
+    secondary: {
+      "Calm": ["Serene", "Relaxed"],
+      "Thoughtful": ["Meditative", "Reflective"],
+      "Centered": ["Grounded", "Stable"]
+    }
+  },
+  "Sad": {
+    color: "#B8C1EC",
+    secondary: {
+      "Grief": ["Heartbroken", "Heavy"],
+      "Lonely": ["Isolated", "Neglected"],
+      "Disappointed": ["Dismayed", "Displeased"]
+    }
+  }
+  // Add more (Fear, Anger, Powerful) as needed
+};
+
+export const PROMPTS = [
+  "What is one thing that felt 'heavy' today? What felt 'light'?",
+  "If your mood was a landscape, what would it look like?",
+  "What is a small win that you want to remember?",
+  "Who or what gave you energy today?"
+];
+
+// Logic to handle saving to LocalStorage
+export const saveMoodLog = (entry) => {
+  const existingLogs = JSON.parse(localStorage.getItem('moodLogs') || '[]');
+  const newLog = {
+    ...entry,
+    id: Date.now(),
+    date: new Date().toISOString()
+  };
+  localStorage.setItem('moodLogs', JSON.stringify([newLog, ...existingLogs]));
+  return newLog;
+};
+
+// Logic to get insights (Example: Most frequent mood)
+export const getWeeklyInsights = (logs) => {
+  if (logs.length === 0) return "No data yet.";
+  const counts = logs.reduce((acc, log) => {
+    acc[log.core] = (acc[log.core] || 0) + 1;
+    return acc;
+  }, {});
+  return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+};
